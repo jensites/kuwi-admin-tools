@@ -1,0 +1,81 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use Getopt::Long;
+use POSIX qw(strftime);
+use Pod::Usage;
+
+my $from    = 'root@localhost';
+my $help    = 0;
+my $logfile = '/var/log/dsmsched.log';
+my @mailto  = ();
+my $subject = "TSM's backup of today failed";
+
+GetOptions(
+    'f|from=s'    => \$from,
+    'h|help'      => \$help,
+    'l|logfile=s' => \$logfile,
+    'm|mailto=s'  => \@mailto,
+) or pod2usage(2);
+pod2usage(1) if $help;
+
+my $today = sprintf "%s|%s",
+                strftime( '%m/%d/%y', localtime ),
+                strftime( '%m/%d/%Y', localtime );
+
+my $fail = 0;
+my @res;
+
+open( my $fh, '<', $logfile ) or die $!;
+while( <$fh> ) {
+    next unless /^$today/;
+    push @res, $_;
+    if ( /objects failed:\s+(\d+)/ && $1 > 0 ) {
+        $fail++;
+    }
+}
+
+exit 0 unless $fail;
+
+foreach my $to ( @mailto ) {
+    open( my $sm, '|/usr/lib/sendmail -oi -t -odq' ) or die $!;
+    print $sm <<"EOF";
+From: <$from>
+To: <$to>
+Subject: $subject
+
+EOF
+    print $sm @res;
+    close $sm or warn "sendmail didn't close nicely";
+}
+
+__END__
+
+=head1 NAME
+
+dsmcheck - Check TSM scheduler logfile
+
+=head1 SYNOPSIS
+
+dsmcheck [options]
+
+ Options:
+   --from      status mail sender address (default: root@localhost)
+   --help      brief help message
+   --logfile   logfile to parse           (default: /var/log/dsmsched.log)
+   --mailto    status mail recipients, ex:
+               dsmcheck --mailto=user1@host1 --mailto=user2@host2
+
+=head1 DESCRIPTION
+
+dsmcheck parses the TSM scheduler logfile and checks for failed objects
+(e.g. files which could not be sent). If there are errors, today's log data
+is sent to the given mail addresses.
+
+=head1 AUTHOR
+
+Frank Wiegand <frank.wiegand@gmail.com>, 2010.
+
+=cut
