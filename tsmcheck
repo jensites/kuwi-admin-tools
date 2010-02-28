@@ -56,23 +56,23 @@ __END__
 
 =head1 NAME
 
-dsmcheck - Check TSM scheduler logfile
+tsmcheck - Check TSM scheduler logfile
 
 =head1 SYNOPSIS
 
-dsmcheck [options]
+tsmcheck [options]
 
  Options:
    --from      status mail sender address             (default: root@localhost)
    --help      brief help message
    --logfile   logfile to parse                       (default: /var/log/dsmsched.log)
    --mailto    status mail recipients, ex:
-               dsmcheck --mailto=user1@host1 --mailto=user2@host2
+               tsmcheck --mailto=user1@host1 --mailto=user2@host2
    --subject   status mail subject                    (default: TSM's backup of today failed)
 
 =head1 DESCRIPTION
 
-dsmcheck parses the TSM scheduler logfile and checks for failed objects
+tsmcheck parses the TSM scheduler logfile and checks for failed objects
 (e.g. files which could not be sent). If there are errors, today's log data
 is sent to the given mail addresses.
 
