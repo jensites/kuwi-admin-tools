@@ -1,0 +1,85 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use Getopt::Long;
+use Pod::Usage;
+
+my @filesystem = ();
+my $from       = 'root@localhost';
+my $help       = 0;
+my @mailto     = ();
+my $subject    = 'Filesystem size exceeded';
+
+GetOptions(
+    'fs|filesystem=s' => \@filesystem,
+    'fr|from=s'       => \$from,
+    'h|help'          => \$help,
+    'm|mailto=s'      => \@mailto,
+    's|subject=s'     => \$subject,
+) or pod2usage(2);
+pod2usage(1) if $help;
+
+my %status = ();
+
+foreach my $entry ( @filesystem ) {
+    my ($mp, $size) = split/,/ => $entry;
+    my $cmd = "df $mp |";
+    open( my $df, "df $mp |" ) or die $!;
+    while( <$df> ) {
+        next if $. == 1; # skip first line
+        if ( /(\d+)%\s\Q$mp/ && $1 >= $size ) {
+            $status{$mp} = $1;
+        }
+    }
+}
+
+exit 0 if keys %status == 0;
+
+foreach my $to ( @mailto ) {
+    open( my $sm, '|/usr/lib/sendmail -oi -t -odq' ) or die $!;
+    print $sm <<"EOF";
+From: <$from>
+To: <$to>
+Subject: $subject
+
+EOF
+    while ( my ($mp, $size) = each %status ) {
+        print $sm "»$mp« is at »$size« %\n";
+    }
+    print $sm "\n\ndf -h says:\n";
+    print $sm `df -h`;
+    close $sm or warn "sendmail didn't close nicely";
+}
+
+__END__
+
+=head1 NAME
+
+partsizecheck - Check partition sizes
+
+=head1 SYNOPSIS
+
+partsizecheck [options]
+
+ Options:
+   --filesystem fs size   filesystems to check and size in percent, ex:
+                          --filesystem / 90 --filesystem /var 95
+   --from                 status mail sender address                     (default: root@localhost)
+   --help                 brief help message
+   --mailto               status mail recipients, ex:
+                          --mailto=user1@host1 --mailto=user2@host2
+   --subject              status mail subject                            (default: Filesystem size exceeded)
+
+=head1 DESCRIPTION
+
+partsizecheck checks the given filesystems against the given maximum sizes.
+If there are full (i.e. more full than you want them) filesystems, a mail
+is sent to the given mail addresses.
+
+=head1 AUTHOR
+
+Frank Wiegand <frank.wiegand@gmail.com>, 2010.
+
+=cut
