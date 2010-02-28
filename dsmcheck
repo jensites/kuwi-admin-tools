@@ -18,6 +18,7 @@ GetOptions(
     'h|help'      => \$help,
     'l|logfile=s' => \$logfile,
     'm|mailto=s'  => \@mailto,
+    's|subject=s' => \$subject,
 ) or pod2usage(2);
 pod2usage(1) if $help;
 
@@ -62,11 +63,12 @@ dsmcheck - Check TSM scheduler logfile
 dsmcheck [options]
 
  Options:
-   --from      status mail sender address (default: root@localhost)
+   --from      status mail sender address             (default: root@localhost)
    --help      brief help message
-   --logfile   logfile to parse           (default: /var/log/dsmsched.log)
+   --logfile   logfile to parse                       (default: /var/log/dsmsched.log)
    --mailto    status mail recipients, ex:
                dsmcheck --mailto=user1@host1 --mailto=user2@host2
+   --subject   status mail subject                    (default: TSM's backup of today failed)
 
 =head1 DESCRIPTION
 
