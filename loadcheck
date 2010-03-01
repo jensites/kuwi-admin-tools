@@ -1,0 +1,83 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use Getopt::Long;
+use Pod::Usage;
+
+my $from    = 'root@localhost';
+my $help    = 0;
+my @mailto  = ();
+my $subject = 'High load';
+
+my $load = 1.5;
+my $time = 15;
+
+GetOptions(
+    'f|from=s'    => \$from,
+    'h|help'      => \$help,
+    'l|load=f'    => \$load,
+    'm|mailto=s'  => \@mailto,
+    's|subject=s' => \$subject,
+    't|time=i'    => \$time,
+) or pod2usage(2);
+pod2usage(1) if $help;
+
+die "time must be 1, 5, or 15, not $time"
+    if $time ne "1" && $time ne "5" && $time ne "15";
+
+chomp( my $uptime = `uptime` );
+my $cur_load = (split /\s+/, $uptime)[ $time == 1 ? -3 : $time == 5 ? -2 : -1 ];
+$cur_load =~ s/,//;
+
+exit 0 if $cur_load < $load;
+
+foreach my $to ( @mailto ) {
+    open( my $sm, '|/usr/lib/sendmail -oi -t -odq' ) or die $!;
+    print $sm <<"EOF";
+From: <$from>
+To: <$to>
+Subject: $subject
+
+»uptime« says:
+
+    $uptime
+
+EOF
+    close $sm or warn "sendmail didn't close nicely";
+}
+
+__END__
+
+=head1 NAME
+
+loadcheck - Check system load
+
+=head1 SYNOPSIS
+
+loadcheck [options]
+
+ Options:
+   --from      status mail sender address                     (default: root@localhost)
+   --help      brief help message
+   --load      load value to be checked
+   --mailto    status mail recipients, ex:
+                 --mailto=user1@host1 --mailto=user2@host2
+   --subject   status mail subject                            (default: Filesystem size exceeded)
+   --time      1, 5, or 15 (minutes).
+
+=head1 DESCRIPTION
+
+loadcheck checks the system load.  If the load is too high, a mail
+is sent to the given mail addresses.
+
+=head1 SEE ALSO
+
+L<uptime(1)>.
+
+=head1 AUTHOR
+
+Frank Wiegand <frank.wiegand@gmail.com>, 2010.
+
+=cut
