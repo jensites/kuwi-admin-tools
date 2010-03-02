@@ -1,0 +1,62 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          indiva-INSTANCE
+# Required-Start:    $apache2
+# Required-Stop:     $apache2
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+### END INIT INFO
+#
+# indiva-kuwi         This init.d script is used to start and stop indiva-INSTANCE.
+
+# Anmerkungen:
+#   * Das Skript wird in /etc/init.d platziert.
+#   * Der obige Block zwischen »### BEGIN INIT INFO« und
+#     »### END INIT INFO« muss bei »Provides« angepasst werden.
+#   * apache2 muss laufen, um die Indiva-Instanz zu starten und ggfls. zu
+#     beenden (das ist gegeben durch die entsprechenden zwei Zeilen)
+#   * Default-Start legt die Runlevel fest, in die Indiva-Instanz startet
+#   * Runlevel:
+#       0: während des Herunterfahrens
+#       S: während des Bootens
+#       1: Singleuser-Mode
+#       2: Multiuser-Mode inkl. Netzwerk (Standard)
+#     3-5: nicht genutzt
+#       6: während des Neustarts
+#   * wenn fertig, dann ausführen:
+#       % sudo update-rc.d indiva-INSTANCE defaults
+
+# Die Variable $INSTANCE muss pro Instanz angepasst werden und
+# sollte genauso wie das Skript selber heissen.
+INSTANCE="indiva-INSTANCE"
+
+#
+# KEINE AENDERUNGEN AB HIER
+#
+
+# Ende, wenn »/var/www/$INSTANCE« nicht existiert
+test -d "/var/www/$INSTANCE" || exit 0
+
+# Hilfsfunktionen importieren
+. /lib/lsb/init-functions
+
+case "$1" in
+start)  if [ -e "/tmp/$INSTANCE.pid" ]; then
+          echo "$INSTANCE seems to be running (/tmp/$INSTANCE.pid exists)."
+          exit 2
+        fi
+        # starte $INSTANCE als User »indiva« via FastCGI
+	su - indiva -c "cd /var/www/$INSTANCE; /var/www/$INSTANCE/script/indiva_fastcgi.pl -l /tmp/$INSTANCE.socket -n 5 -p /tmp/$INSTANCE.pid -d"
+        ;;
+stop)   if [ -e "/tmp/$INSTANCE.pid" ]; then
+          PID=`cat /tmp/$INSTANCE.pid`
+          kill $PID
+        else
+          echo "/tmp/$INSTANCE.pid does not exist"
+        fi
+        ;;
+*)      log_action_msg "Usage: /etc/init.d/$INSTANCE {start|stop}"
+        exit 2
+        ;;
+esac
+exit 0
