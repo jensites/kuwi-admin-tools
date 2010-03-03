@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# - zeigt die 10 groessten Home-Verzeichnisse an
+# - Groessenangabe erfolgt in Gibibyte (GiB)
+# - muss (wahrscheinlich) als Super-User ausgefuehrt werden
+
+du -s /home/* | sort -rn | head | perl -lane 'printf "%7.2f GiB\t%s\n", $F[0]/1024**2, $F[1]'
