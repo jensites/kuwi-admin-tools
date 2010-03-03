@@ -1,0 +1,14 @@
+#! /bin/sh
+
+# save this file as /etc/rc6.d/notify-reboot
+
+FROM="user@host"
+TO="user1@host1, user2@host2"
+
+cat <<EOT | sendmail -oi -t -f "$FROM"
+From: $FROM
+To: $TO
+Subject: Server `uname -n` going down for reboot
+
+Server `uname -n` going down for reboot at `date`
+EOT
