@@ -55,6 +55,16 @@ stop)   if [ -e "/tmp/$INSTANCE.pid" ]; then
           echo "/tmp/$INSTANCE.pid does not exist"
         fi
         ;;
+restart) if [ -e "/tmp/$INSTANCE.pid" ]; then
+          PID=`cat /tmp/$INSTANCE.pid`
+          kill $PID
+          echo "$INSTANCE with PID $PID is killed."
+        else
+          echo "$INSTANCE seems not to be running (/tmp/$INSTANCE.pid does not exist). It will be started now."
+        fi
+        # starte $INSTANCE als User »indiva« via FastCGI
+        su - indiva -c "cd /var/www/$INSTANCE; /var/www/$INSTANCE/script/indiva_fastcgi.pl -l /tmp/$INSTANCE.socket -n 5 -p /tmp/$INSTANCE.pid -d"
+        ;;
 *)      log_action_msg "Usage: /etc/init.d/$INSTANCE {start|stop}"
         exit 2
         ;;
