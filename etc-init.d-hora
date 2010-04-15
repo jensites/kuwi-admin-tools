@@ -1,0 +1,70 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          hora
+# Required-Start:    $apache2
+# Required-Stop:     $apache2
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+### END INIT INFO
+#
+# hora         This init.d script is used to start and stop hora.
+
+# Anmerkungen:
+#   * Der obige Block zwischen »### BEGIN INIT INFO« und
+#     »### END INIT INFO« muss bei »Provides« angepasst werden.
+#   * apache2 muss laufen, um die Indiva-Instanz zu starten und ggfls. zu
+#     beenden (das ist gegeben durch die entsprechenden zwei Zeilen)
+#   * Default-Start legt die Runlevel fest, in die Indiva-Instanz startet
+#   * Runlevel:
+#       1: während des Herunterfahrens
+#       S: während des Bootens
+#       1: Singleuser-Mode
+#       2: Multiuser-Mode inkl. Netzwerk (Standard)
+#     3-5: nicht genutzt
+#       6: während des Neustarts
+
+# Die Variable $INSTANCE muss pro Instanz angepasst werden und
+# sollte genauso wie das Skript selber heissen.
+INSTANCE="hora"
+
+#
+# KEINE AENDERUNGEN AB HIER
+#
+
+# Ende, wenn »/var/www-special/$INSTANCE« nicht existiert
+test -d "/var/www-special/$INSTANCE" || exit 0
+
+# Hilfsfunktionen importieren
+. /lib/lsb/init-functions
+
+case "$1" in
+start)  HORAPID=`ps -e | grep [h]ora2 | awk '{ print $1 }'`
+        if [ -n "$HORAPID" ]; then
+          echo "$INSTANCE seems to be running (PID: $HORAPID named hora exists)."
+        else
+          # starte $INSTANCE als User »ts« via FastCGI
+          su - ts -c "cd /var/www-special/$INSTANCE; nohup script/hora2_server.pl &"
+        fi
+        ;;
+stop)   HORAPID=`ps -e | grep [h]ora2 | awk '{ print $1 }'`
+        if [ -n "$HORAPID" ]; then
+          kill $HORAPID
+        else
+          echo "PID named hora does not exist"
+        fi
+        ;;
+restart) HORAPID=`ps -e | grep [h]ora2 | awk '{ print $1 }'`
+        if [ -n "$HORAPID" ]; then
+          kill $HORAPID
+        else
+          echo "$INSTANCE seems not to be running (PID named hora does not exist). It will be started now."
+        fi
+        # starte $INSTANCE als User »ts« via FastCGI
+        su - ts -c "cd /var/www-special/$INSTANCE; nohup script/hora2_server.pl &"
+        ;;
+*)      log_action_msg "Usage: /etc/init.d/$INSTANCE {start|stop}"
+        exit 2
+        ;;
+esac
+exit 0
+
