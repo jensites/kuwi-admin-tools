@@ -12,9 +12,9 @@
 # Anmerkungen:
 #   * Der obige Block zwischen »### BEGIN INIT INFO« und
 #     »### END INIT INFO« muss bei »Provides« angepasst werden.
-#   * apache2 muss laufen, um die Indiva-Instanz zu starten und ggfls. zu
+#   * apache2 muss laufen, um Hora zu starten und ggfls. zu
 #     beenden (das ist gegeben durch die entsprechenden zwei Zeilen)
-#   * Default-Start legt die Runlevel fest, in die Indiva-Instanz startet
+#   * Default-Start legt die Runlevel fest, in die Hora startet
 #   * Runlevel:
 #       1: während des Herunterfahrens
 #       S: während des Bootens
@@ -23,8 +23,6 @@
 #     3-5: nicht genutzt
 #       6: während des Neustarts
 
-# Die Variable $INSTANCE muss pro Instanz angepasst werden und
-# sollte genauso wie das Skript selber heissen.
 INSTANCE="hora"
 
 #
